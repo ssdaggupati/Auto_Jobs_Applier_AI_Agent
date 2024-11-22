@@ -274,16 +274,23 @@ This file defines your job search parameters and bot behavior. Each section cont
     - ollama: llama2, mistral:v0.3
     - claude: any model
     - gemini: any model
+    - azure: leave blank. your model deployment below define the model
     - groq: llama3-groq-70b-8192-tool-use-preview, llama3-groq-8b-8192-tool-use-preview, llama-3.1-70b-versatile, llama-3.1-8b-instant, llama-3.2-3b-preview, llama3-70b-8192, llama3-8b-8192, mixtral-8x7b-32768
     - aiml: any model
       
-- `llm_api_url`:
+- `LLM_API_URL`:
   - Link of the API endpoint for the LLM model. (only requried for ollama)
     - ollama: <http://127.0.0.1:11434/>
     - claude: <https://api.anthropic.com/v1>
     - gemini: <https://aistudio.google.com/app/apikey>
+    - azure: find your endpoint url in your model deployment
     - groq: <https://api.groq.com/v1>
     - aiml: <https://api.aimlapi.com/v2>
+- `AZURE_MODEL_DEPLOYMENT_NAME`:
+  - The deployment name of your model
+- `AZURE_API_VERSION`
+  - example: `2024-08-01-preview`
+  - for more api version: <https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation>
 - Note: To run local Ollama, follow the guidelines here: [Guide to Ollama deployment](https://github.com/ollama/ollama)
   
 ### 3. plain_text_resume.yaml

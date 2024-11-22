@@ -22,6 +22,7 @@ import ai_hawk.llm.prompts as prompts
 from config import JOB_SUITABILITY_SCORE
 from constants import (
     AVAILABILITY,
+    AZURE,
     CERTIFICATIONS,
     CLAUDE,
     COMPANY,
@@ -107,6 +108,21 @@ class OpenAIModel(AIModel):
         response = self.model.invoke(prompt)
         return response
 
+class AzureModel(AIModel):
+    def __init__(self, api_key: str, azure_model_deployment_name: str, api_version: str, llm_api_url: str):
+        from langchain_openai import AzureChatOpenAI
+        self.model = AzureChatOpenAI(
+                azure_deployment=azure_model_deployment_name,
+                api_version=api_version,
+                openai_api_key=api_key,
+                azure_endpoint=llm_api_url,
+                temperature=0.4
+            )
+
+    def invoke(self, prompt: str) -> BaseMessage:
+        logger.debug("Invoking Azure API")
+        response = self.model.invoke(prompt)
+        return response
 
 class AIMLModel(AIModel):
     def __init__(self, api_key: str, llm_model: str):
@@ -217,8 +233,11 @@ class AIAdapter:
     def _create_model(self, config: dict, api_key: str) -> AIModel:
         llm_model_type = cfg.LLM_MODEL_TYPE
         llm_model = cfg.LLM_MODEL
-
         llm_api_url = cfg.LLM_API_URL
+        
+        # Azure specific config
+        azure_model_deployment_name = cfg.AZURE_MODEL_DEPLOYMENT_NAME
+        azure_api_version = cfg.AZURE_API_VERSION
 
         logger.debug(f"Using {llm_model_type} with {llm_model}")
 
@@ -232,6 +251,8 @@ class AIAdapter:
             return OllamaModel(llm_model, llm_api_url)
         elif llm_model_type == GEMINI:
             return GeminiModel(api_key, llm_model)
+        elif llm_model_type == AZURE:
+            return AzureModel(api_key, azure_model_deployment_name, azure_api_version, llm_api_url)        
         elif llm_model_type == GROQ:
             return GroqAIModel(api_key, llm_model)     
         elif llm_model_type == HUGGINGFACE:
