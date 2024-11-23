@@ -6,12 +6,45 @@ from src.logging import logger
 
 
 @dataclass
+class PersonalInformation:
+    name: str
+    surname: str
+    date_of_birth: str
+    country: str
+    city: str
+    address: str
+    phone_prefix: str
+    phone: str
+    email: str
+    github: str
+    linkedin: str
+
+    def __post_init__(self):
+        self._validate_types()
+
+    def _validate_types(self):
+        for field_name, field_type in self.__annotations__.items():
+            value = getattr(self, field_name)
+            if not isinstance(value, str):
+                raise TypeError(f"Field '{field_name}' must be of type 'str', got '{type(value).__name__}'")
+
+
+@dataclass
 class SelfIdentification:
     gender: str
     pronouns: str
     veteran: str
     disability: str
     ethnicity: str
+
+    def __post_init__(self):
+        self._validate_types()
+
+    def _validate_types(self):
+        for field_name, field_type in self.__annotations__.items():
+            value = getattr(self, field_name)
+            if not isinstance(value, str):
+                raise TypeError(f"Field '{field_name}' must be of type 'str', got '{type(value).__name__}'")
 
 
 @dataclass
@@ -29,10 +62,18 @@ class LegalAuthorization:
     legally_allowed_to_work_in_canada: str
     requires_canada_sponsorship: str
     uk_work_authorization: str
-    requires_uk_visa: str 
+    requires_uk_visa: str
     legally_allowed_to_work_in_uk: str
     requires_uk_sponsorship: str
 
+    def __post_init__(self):
+        self._validate_types()
+
+    def _validate_types(self):
+        for field_name, field_type in self.__annotations__.items():
+            value = getattr(self, field_name)
+            if not isinstance(value, str):
+                raise TypeError(f"Field '{field_name}' must be of type 'str', got '{type(value).__name__}'")
 
 
 @dataclass
@@ -44,19 +85,43 @@ class WorkPreferences:
     willing_to_undergo_drug_tests: str
     willing_to_undergo_background_checks: str
 
+    def __post_init__(self):
+        self._validate_types()
+
+    def _validate_types(self):
+        for field_name, field_type in self.__annotations__.items():
+            value = getattr(self, field_name)
+            if not isinstance(value, str):
+                raise TypeError(f"Field '{field_name}' must be of type 'str', got '{type(value).__name__}'")
+
 
 @dataclass
 class Availability:
     notice_period: str
+
+    def __post_init__(self):
+        self._validate_types()
+
+    def _validate_types(self):
+        if not isinstance(self.notice_period, str):
+            raise TypeError(f"Field 'notice_period' must be of type 'str', got '{type(self.notice_period).__name__}'")
 
 
 @dataclass
 class SalaryExpectations:
     salary_range_usd: str
 
+    def __post_init__(self):
+        self._validate_types()
+
+    def _validate_types(self):
+        if not isinstance(self.salary_range_usd, str):
+            raise TypeError(f"Field 'salary_range_usd' must be of type 'str', got '{type(self.salary_range_usd).__name__}'")
+
 
 @dataclass
 class JobApplicationProfile:
+    personal_information: PersonalInformation
     self_identification: SelfIdentification
     legal_authorization: LegalAuthorization
     work_preferences: WorkPreferences
@@ -64,6 +129,9 @@ class JobApplicationProfile:
     salary_expectations: SalaryExpectations
 
     def __init__(self, yaml_str: str):
+        """
+        Initializes the JobApplicationProfile with data parsed from a YAML string.
+        """
         logger.debug("Initializing JobApplicationProfile with provided YAML string")
         try:
             data = yaml.safe_load(yaml_str)
@@ -78,6 +146,18 @@ class JobApplicationProfile:
         if not isinstance(data, dict):
             logger.error(f"YAML data must be a dictionary, received: {type(data)}")
             raise TypeError("YAML data must be a dictionary.")
+
+        # Process personal_information
+        try:
+            logger.debug("Processing personal_information")
+            self.personal_information = PersonalInformation(**data['personal_information'])
+            logger.debug(f"personal_information processed: {self.personal_information}")
+        except KeyError as e:
+            logger.error(f"Required field {e} is missing in personal_information data.")
+            raise KeyError(f"Required field {e} is missing in personal_information data.") from e
+        except TypeError as e:
+            logger.error(f"Error in personal_information data: {e}")
+            raise TypeError(f"Error in personal_information data: {e}") from e
 
         # Process self_identification
         try:
@@ -119,7 +199,7 @@ class JobApplicationProfile:
         try:
             logger.debug("Processing work_preferences")
             self.work_preferences = WorkPreferences(**data['work_preferences'])
-            logger.debug(f"Work_preferences processed: {self.work_preferences}")
+            logger.debug(f"work_preferences processed: {self.work_preferences}")
         except KeyError as e:
             logger.error(f"Required field {e} is missing in work_preferences data.")
             raise KeyError(f"Required field {e} is missing in work_preferences data.") from e
@@ -137,7 +217,7 @@ class JobApplicationProfile:
         try:
             logger.debug("Processing availability")
             self.availability = Availability(**data['availability'])
-            logger.debug(f"Availability processed: {self.availability}")
+            logger.debug(f"availability processed: {self.availability}")
         except KeyError as e:
             logger.error(f"Required field {e} is missing in availability data.")
             raise KeyError(f"Required field {e} is missing in availability data.") from e
@@ -172,15 +252,21 @@ class JobApplicationProfile:
         logger.debug("JobApplicationProfile initialization completed successfully.")
 
     def __str__(self):
+        """
+        Returns a string representation of the JobApplicationProfile.
+        """
         logger.debug("Generating string representation of JobApplicationProfile")
 
         def format_dataclass(obj):
             return "\n".join(f"{field.name}: {getattr(obj, field.name)}" for field in obj.__dataclass_fields__.values())
 
-        formatted_str = (f"Self Identification:\n{format_dataclass(self.self_identification)}\n\n"
-                         f"Legal Authorization:\n{format_dataclass(self.legal_authorization)}\n\n"
-                         f"Work Preferences:\n{format_dataclass(self.work_preferences)}\n\n"
-                         f"Availability: {self.availability.notice_period}\n\n"
-                         f"Salary Expectations: {self.salary_expectations.salary_range_usd}\n\n")
+        formatted_str = (
+            f"Personal Information:\n{format_dataclass(self.personal_information)}\n\n"
+            f"Self Identification:\n{format_dataclass(self.self_identification)}\n\n"
+            f"Legal Authorization:\n{format_dataclass(self.legal_authorization)}\n\n"
+            f"Work Preferences:\n{format_dataclass(self.work_preferences)}\n\n"
+            f"Availability:\n{format_dataclass(self.availability)}\n\n"
+            f"Salary Expectations:\n{format_dataclass(self.salary_expectations)}\n"
+        )
         logger.debug(f"String representation generated: {formatted_str}")
         return formatted_str
